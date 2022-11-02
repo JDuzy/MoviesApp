@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace 'com.juanduzac.movieapp'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.juanduzac.movieapp"
         minSdk 21
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -21,6 +21,10 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+        buildConfigField "String", "API_KEY", "\"${properties.getProperty("API_KEY")}\""
+        resValue "string", "api_key", "\"${properties.getProperty("API_KEY")}\""
     }
 
     buildTypes {
