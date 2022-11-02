@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.juanduzac.movieapp.ui.theme.MovieAppTheme
+import com.juanduzac.movieapp.presentation.movielist.ui.theme.MovieAppTheme
 
 private val movies = listOf("Spider man", "Toy story", "Toy story 2")
 
