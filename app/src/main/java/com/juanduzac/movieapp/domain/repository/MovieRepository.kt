@@ -7,12 +7,11 @@ import com.juanduzac.movieapp.domain.util.Resource
 interface MovieRepository {
 
     suspend fun getMovies(
-        forceFetchFromRemote: Boolean,
-        query: String
+        page: Int?
     ): Resource<MoviesListResponse>
 
     suspend fun getMovieDetail(
-        vendorId: Long
+        movieId: Long
     ): Resource<Movie>
 
 }
