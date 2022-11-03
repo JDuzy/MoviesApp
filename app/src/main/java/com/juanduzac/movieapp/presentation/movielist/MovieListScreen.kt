@@ -30,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.juanduzac.movieapp.domain.model.Movie
@@ -62,7 +64,7 @@ private val movies = listOf(
 )
 
 @Composable
-fun MovieListScreen(movies: List<Movie>) {
+fun MovieListScreen(navController: NavController) {
     Scaffold(
         topBar = { MovieListTopBar("Movies APP") }
     ) {
@@ -210,7 +212,7 @@ fun SubscribedMovieCard(movie: Movie) {
 private fun PreviewScreen() {
     MovieAppTheme {
         MovieListScreen(
-            movies
+            rememberNavController()
         )
     }
 }
