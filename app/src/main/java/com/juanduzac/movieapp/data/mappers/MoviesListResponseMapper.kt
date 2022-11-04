@@ -5,5 +5,5 @@ import com.juanduzac.movieapp.domain.model.MoviesListResponse
 
 fun MoviesListResponseDto.toMoviesListResponse(): MoviesListResponse =
     MoviesListResponse(
-       movies = movies?.map { it.toMovie() }
+       movies = movies?.map { it.toMovie() } ?: mutableListOf()
     )
