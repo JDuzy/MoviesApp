@@ -1,6 +1,8 @@
 package com.juanduzac.movieapp.presentation.movielist
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +13,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -27,50 +33,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.juanduzac.movieapp.domain.model.Movie
-import com.juanduzac.movieapp.presentation.ui.theme.MovieAppTheme
 import com.juanduzac.movieapp.presentation.ui.theme.Shapes
 
 private const val BaseUrl = "https://image.tmdb.org/t/p/original/"
 
-private val movies = listOf(
-    Movie(
-        title = "Pelicula",
-        posterPath = "wigZBAmNrIhxp2FNGOROUAeHvdh.jpg"
-    ),
-    Movie(
-        title = "Pelicula",
-        posterPath = "pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"
-    ),
-    Movie(
-        title = "Pelicula",
-        posterPath = "pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"
-    ),
-    Movie(
-        title = "Pelicula",
-        posterPath = "pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"
-    ),
-    Movie(
-        title = "Pelicula",
-        posterPath = "wigZBAmNrIhxp2FNGOROUAeHvdh.jpg"
-    )
-)
-
 @Composable
-fun MovieListScreen(navController: NavController) {
+fun MovieListScreen(navController: NavController, viewModel: MovieListViewModel) {
+
+    val scrollState = rememberLazyListState()
+
     Scaffold(
         topBar = { MovieListTopBar("Movies APP") }
     ) {
         LazyColumn(
-            Modifier
-                .padding(it)
+            modifier = Modifier
+                .padding(it),
+            state = scrollState
         ) {
             item {
                 SubscribedMoviesRowTitle(modifier = Modifier.padding(16.dp))
@@ -78,7 +62,7 @@ fun MovieListScreen(navController: NavController) {
             item {
                 SubscribedMoviesLazyRow(
                     modifier = Modifier.padding(start = 16.dp),
-                    movies
+                    viewModel.moviesResponse.movies
                 )
             }
             item {
@@ -90,10 +74,26 @@ fun MovieListScreen(navController: NavController) {
                     )
                 )
             }
-            items(movies) { movie ->
+
+            itemsIndexed(viewModel.moviesResponse.movies) { index, movie ->
+                if (viewModel.shouldFetchMoreMovies(index))
+                    viewModel.loadNextMovies()
                 RecommendedMovieCard(movie)
                 Spacer(modifier = Modifier.height(16.dp))
             }
+            item {
+                if (viewModel.isLoading) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+
         }
     }
 }
@@ -134,12 +134,16 @@ fun SubscribedMoviesRowTitle(modifier: Modifier) {
 }
 
 @Composable
-fun SubscribedMoviesLazyRow(modifier: Modifier, movies: List<Movie>) {
-    LazyRow(modifier = modifier) {
-        items(movies) { movie ->
-            SubscribedMovieCard(movie)
-            Spacer(modifier = Modifier.width(12.dp))
+fun SubscribedMoviesLazyRow(modifier: Modifier, movies: List<Movie>?) {
+    movies?.let {
+        LazyRow(modifier = modifier) {
+            items(movies) { movie ->
+                SubscribedMovieCard(movie)
+                Spacer(modifier = Modifier.width(12.dp))
+            }
         }
+    } ?: run {
+        Text(text = "SIGUE SERIES PARA VERLAS AQUI") // TODO CARD
     }
 }
 
@@ -203,16 +207,6 @@ fun SubscribedMovieCard(movie: Movie) {
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
-        )
-    }
-}
-
-@Composable
-@Preview
-private fun PreviewScreen() {
-    MovieAppTheme {
-        MovieListScreen(
-            rememberNavController()
         )
     }
 }
