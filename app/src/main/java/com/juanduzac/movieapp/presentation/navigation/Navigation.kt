@@ -6,15 +6,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.juanduzac.movieapp.presentation.movielist.MovieListScreen
+import com.juanduzac.movieapp.presentation.movielist.MovieListViewModel
 
 @Composable
 fun Navigation(
     navController: NavHostController,
-    // viewModel: ViewModel = hiltViewModel(),
+    viewModel: MovieListViewModel = hiltViewModel(),
 ) {
     NavHost(navController = navController, startDestination = Screen.MovieListScreen.route) {
         composable(route = Screen.MovieListScreen.route) {
-            MovieListScreen(navController = navController)
+            MovieListScreen(navController = navController, viewModel = viewModel)
         }
         composable(route = Screen.MovieDetailScreen.route) {
             /*MovieDetailScreen(
