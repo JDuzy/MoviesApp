@@ -71,7 +71,7 @@ fun MovieListScreen(navController: NavController, viewModel: MovieListViewModel)
                         coroutineScope.launch {
                             scrollState.animateScrollToItem(index = 0)
                         }
-                                   },
+                    },
                     onClickNavIcon = { isSearching = true },
                     onDeleteSearch = { searchQuery = "" }
                 )
