@@ -20,4 +20,13 @@ interface MovieApi {
         @Path("movie_id") movieId: Long,
         @Query("api_key") apiKey: String = BuildConfig.API_KEY
     ) : MovieDto
+
+    @GET("search/movie")
+    suspend fun searchMovies(
+        @Query("api_key") apiKey: String = BuildConfig.API_KEY,
+        @Query("page") page: Int? = null,
+        @Query("query") query: String
+    ) : MoviesListResponseDto
+
+
 }

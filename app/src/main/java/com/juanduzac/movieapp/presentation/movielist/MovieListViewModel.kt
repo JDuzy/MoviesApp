@@ -13,6 +13,8 @@ import com.juanduzac.movieapp.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,9 +26,13 @@ class MovieListViewModel @Inject constructor(
     var moviesResponse by mutableStateOf(MoviesListResponse())
     var isLoading by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
+
+    var isSearching by mutableStateOf(false)
+    var searchQuery by mutableStateOf("")
+    private var searchJob: Job? = null
+
     var endReached by mutableStateOf(false)
     private var pageKey: Int? = 1
-
 
     private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
         error = throwable.message
@@ -78,10 +84,57 @@ class MovieListViewModel @Inject constructor(
         }
     }
 
-    fun shouldFetchMoreMovies(actualIndex: Int): Boolean {
-        moviesResponse.movies?.let { movieList ->
-            return (actualIndex >= movieList.lastIndex && !endReached && !isLoading)
+    fun shouldFetchMoreMovies(actualIndex: Int): Boolean =
+        (actualIndex >= moviesResponse.movies.lastIndex && !endReached && !isLoading)
+
+
+    fun searchMovies() {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch(Dispatchers.Main + coroutineExceptionHandler) {
+            isLoading = true
+            resetPageKey()
+            delay(500L)
+            val searchedMovies = fetchMoviesWithQuery().getOrElse {
+                error = it.message
+                isLoading = false
+            } as List<Movie>
+            moviesResponse = MoviesListResponse(movies = searchedMovies)
+            pageKey?.plus(1)
         }
-        return false
     }
+
+    private suspend fun fetchMoviesWithQuery(): Result<List<Movie>> {
+        when (val result = repository.searchMovies(
+            searchQuery, pageKey
+        )) {
+            is Resource.Success -> {
+                isLoading = false
+                result.data?.movies?.let { return Result.success(it) } ?: return Result.failure(
+                    Exception(result.message)
+                )
+            }
+            is Resource.Error -> {
+                isLoading = false
+                error = result.message
+                return Result.failure(Exception(result.message))
+            }
+        }
+    }
+
+    private fun resetPageKey() {
+        pageKey = 1
+    }
+
+    fun cancelSearch() {
+        viewModelScope.launch(Dispatchers.Main + coroutineExceptionHandler) {
+            resetPageKey()
+            val searchedMovies = getMovies(pageKey).getOrElse {
+                error = it.message
+                isLoading = false
+            } as List<Movie>
+            moviesResponse = MoviesListResponse(movies = searchedMovies)
+            pageKey?.plus(1)
+        }
+    }
+
 }

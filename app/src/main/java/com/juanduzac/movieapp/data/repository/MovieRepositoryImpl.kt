@@ -40,4 +40,16 @@ class MovieRepositoryImpl @Inject constructor(
                 Resource.Error(e.message ?: "An unknown error has ocurred")
             }
         }
+
+    override suspend fun searchMovies(query: String, page: Int?): Resource<MoviesListResponse> =
+        withContext(Dispatchers.IO) {
+            return@withContext try {
+                Resource.Success(
+                    data = api.searchMovies(query = query, page = page).toMoviesListResponse()
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Resource.Error(e.message ?: "An unknown error has ocurred")
+            }
+        }
 }
