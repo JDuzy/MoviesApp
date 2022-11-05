@@ -1,9 +1,10 @@
 package com.juanduzac.movieapp.presentation.movielist
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -28,6 +28,7 @@ import androidx.compose.material.contentColorFor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,7 +40,11 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.juanduzac.movieapp.domain.model.Movie
+import com.juanduzac.movieapp.presentation.movielist.composables.Search
+import com.juanduzac.movieapp.presentation.ui.theme.Black
 import com.juanduzac.movieapp.presentation.ui.theme.Shapes
+import com.juanduzac.movieapp.presentation.ui.theme.White
+import kotlinx.coroutines.launch
 
 private const val BaseUrl = "https://image.tmdb.org/t/p/original/"
 
@@ -47,9 +52,31 @@ private const val BaseUrl = "https://image.tmdb.org/t/p/original/"
 fun MovieListScreen(navController: NavController, viewModel: MovieListViewModel) {
 
     val scrollState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { MovieListTopBar("Movies APP") }
+        topBar = {
+            with(viewModel) {
+                MovieListTopBar(
+                    "Movies APP",
+                    isSearching = isSearching,
+                    searchQuery = searchQuery,
+                    onQueryChange = {
+                        searchQuery = it
+                        searchMovies()
+                    },
+                    cancelSearch = {
+                        isSearching = false
+                        cancelSearch()
+                        coroutineScope.launch {
+                            scrollState.animateScrollToItem(index = 0)
+                        }
+                                   },
+                    onClickNavIcon = { isSearching = true },
+                    onDeleteSearch = { searchQuery = "" }
+                )
+            }
+        }
     ) {
         LazyColumn(
             modifier = Modifier
@@ -102,26 +129,63 @@ fun MovieListScreen(navController: NavController, viewModel: MovieListViewModel)
 fun MovieListTopBar(
     title: String,
     modifier: Modifier = Modifier,
-    actions: @Composable (RowScope.() -> Unit) = {},
-    backgroundColor: Color = Color.Transparent,
+    backgroundColor: Color = Black,
     contentColor: Color = contentColorFor(backgroundColor),
-    elevation: Dp = 0.dp
+    elevation: Dp = 0.dp,
+    isSearching: Boolean,
+    searchQuery: String,
+    onQueryChange: (String) -> Unit,
+    cancelSearch: () -> Unit,
+    onClickNavIcon: () -> Unit,
+    onDeleteSearch: () -> Unit
 ) {
     TopAppBar(
-        title = { Text(text = title) },
-        navigationIcon = { SearchIcon() },
-        actions = actions,
         backgroundColor = backgroundColor,
         contentColor = contentColor,
         modifier = modifier,
         elevation = elevation
-    )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (!isSearching) {
+                    SearchIcon(onClickNavIcon, White)
+                    Text(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        text = title,
+                        color = White
+                    )
+                } else {
+                    Search(
+                        modifier = Modifier
+                            .padding(start = 16.dp, bottom = 12.dp)
+                            .fillMaxWidth(0.8f),
+                        value = searchQuery,
+                        onValueChange = onQueryChange,
+                        onDelete = onDeleteSearch,
+                        placeholder = "Buscar"
+                    )
+                    Text(
+                        modifier = Modifier
+                            .clickable { cancelSearch() }
+                            .padding(start = 12.dp, bottom = 12.dp),
+                        text = "Cancel",
+                        color = White
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
-private fun SearchIcon() {
-    IconButton(onClick = { /*TODO*/ }) {
-        Icon(imageVector = Icons.Rounded.Search, contentDescription = null)
+private fun SearchIcon(onClick: () -> Unit, color: Color) {
+    IconButton(onClick = onClick) {
+        Icon(imageVector = Icons.Rounded.Search, contentDescription = null, tint = color)
     }
 }
 

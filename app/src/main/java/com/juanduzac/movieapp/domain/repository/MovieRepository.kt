@@ -14,4 +14,11 @@ interface MovieRepository {
         movieId: Long
     ): Resource<Movie>
 
+    suspend fun searchMovies(
+        query: String,
+        page: Int?
+    ): Resource<MoviesListResponse>
+
+
+
 }
