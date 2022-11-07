@@ -67,7 +67,16 @@
     default: {
       from: 'start',
       to: 'end',
-      pathMovionArc: 'startVertical'
+      pathMovionArc: 'startVertical',
+      KeyFrames: {
+        KeyAttributes: [
+          {
+            target: ['release_year'],
+            frames: [0, 40, 100],
+            alpha: [1, 0, 0]
+          }
+        ]
+      }
     }
   }
 }
