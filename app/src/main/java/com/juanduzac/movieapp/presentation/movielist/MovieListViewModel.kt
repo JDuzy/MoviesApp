@@ -24,6 +24,7 @@ class MovieListViewModel @Inject constructor(
 ) : ViewModel() {
 
     var moviesResponse by mutableStateOf(MoviesListResponse())
+    var selectedMovie by mutableStateOf(Movie())
     var isLoading by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
 
@@ -137,4 +138,7 @@ class MovieListViewModel @Inject constructor(
         }
     }
 
+    fun getMovieDetails(movie: Movie) {
+        selectedMovie = movie
+    }
 }

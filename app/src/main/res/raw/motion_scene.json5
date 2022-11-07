@@ -1,0 +1,82 @@
+{
+  ConstraintSets: {
+    start: {
+      back_button: {
+        start: ['parent', 'start', 16],
+        top: ['parent', 'top', 0]
+      },
+      poster_image: {
+        width: 200,
+        height: 300,
+        top: ['parent', 'top', 40],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0]
+      },
+      movie_title: {
+        top: ['poster_image', 'bottom', 20],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        alpha: 1,
+      },
+      release_year: {
+        top: ['movie_title', 'bottom', 4],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        alpha: 1
+      },
+      subscribe_button: {
+        top: ['release_year', 'bottom', 20],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        alpha: 1
+      }
+    },
+    end: {
+      back_button: {
+        start: ['parent', 'start', 16],
+        top: ['parent', 'top', 0]
+      },
+      poster_image: {
+        width: 50,
+        height: 75,
+        top: ['parent', 'top', 16],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0]
+      },
+      movie_title: {
+        top: ['poster_image', 'bottom', 20],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        alpha: 0
+      },
+      release_year: {
+        top: ['movie_title', 'bottom', 4],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        alpha: 0
+      },
+      subscribe_button: {
+        top: ['poster_image', 'bottom', 20],
+        start: ['parent', 'start', 0],
+        end: ['parent', 'end', 0],
+        alpha: 0.5
+      }
+    }
+  },
+  Transitions: {
+    default: {
+      from: 'start',
+      to: 'end',
+      pathMovionArc: 'startVertical',
+      KeyFrames: {
+        KeyAttributes: [
+          {
+            target: ['release_year'],
+            frames: [0, 40, 100],
+            alpha: [1, 0, 0]
+          }
+        ]
+      }
+    }
+  }
+}
