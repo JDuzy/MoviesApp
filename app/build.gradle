@@ -98,4 +98,9 @@ dependencies {
 
     // Kotlin Extensions and Coroutines support for Room
     implementation "androidx.room:room-ktx:2.4.3"
+
+    // Motion Layout
+    implementation "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+
+    implementation('androidx.palette:palette:1.0.0')
 }
