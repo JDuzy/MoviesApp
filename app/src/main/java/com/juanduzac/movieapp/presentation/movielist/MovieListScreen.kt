@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -41,6 +42,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.juanduzac.movieapp.domain.model.Movie
 import com.juanduzac.movieapp.presentation.movielist.composables.Search
+import com.juanduzac.movieapp.presentation.navigation.Screen
 import com.juanduzac.movieapp.presentation.ui.theme.Black
 import com.juanduzac.movieapp.presentation.ui.theme.Shapes
 import com.juanduzac.movieapp.presentation.ui.theme.White
@@ -105,7 +107,10 @@ fun MovieListScreen(navController: NavController, viewModel: MovieListViewModel)
             itemsIndexed(viewModel.moviesResponse.movies) { index, movie ->
                 if (viewModel.shouldFetchMoreMovies(index))
                     viewModel.loadNextMovies()
-                RecommendedMovieCard(movie)
+                RecommendedMovieCard(movie) {
+                    viewModel.getMovieDetails(movie)
+                    navController.navigate(Screen.MovieDetailScreen.route)
+                }
                 Spacer(modifier = Modifier.height(16.dp))
             }
             item {
@@ -219,15 +224,17 @@ fun RecommendedMoviesColumnTitle(modifier: Modifier) {
     )
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun RecommendedMovieCard(movie: Movie) {
+fun RecommendedMovieCard(movie: Movie, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .height(152.dp),
         shape = Shapes.medium,
-        elevation = 4.dp
+        elevation = 4.dp,
+        onClick = onClick
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
