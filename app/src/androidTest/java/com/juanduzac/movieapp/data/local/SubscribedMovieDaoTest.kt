@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 @SmallTest
-class SubscribedMovieEntityTest {
+class SubscribedMovieDaoTest {
 
     private lateinit var db: MovieDatabase
     private lateinit var dao: SubscribedMovieDao
