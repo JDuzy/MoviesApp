@@ -37,12 +37,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.juanduzac.movieapp.R
 import com.juanduzac.movieapp.domain.model.Movie
+import com.juanduzac.movieapp.presentation.movielist.composables.RecommendedMovieCard
 import com.juanduzac.movieapp.presentation.movielist.composables.Search
 import com.juanduzac.movieapp.presentation.navigation.Screen
 import com.juanduzac.movieapp.presentation.ui.theme.Black
@@ -52,7 +55,6 @@ import com.juanduzac.movieapp.presentation.ui.theme.Shapes
 import com.juanduzac.movieapp.presentation.ui.theme.White
 import kotlinx.coroutines.launch
 
-private const val BaseUrl = "https://image.tmdb.org/t/p/original/"
 
 @Composable
 fun MovieListScreen(navController: NavController, viewModel: MovieListViewModel) {
@@ -246,45 +248,6 @@ fun RecommendedMoviesColumnTitle(modifier: Modifier) {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun RecommendedMovieCard(movie: Movie, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-            .height(152.dp),
-        shape = Shapes.medium,
-        elevation = 4.dp,
-        onClick = onClick
-    ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(BaseUrl + movie.posterPath)
-                .crossfade(true)
-                .build(),
-            colorFilter = ColorFilter.tint(color = DarkBlue, BlendMode.Color),
-            placeholder = null,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-
-        )
-
-        Box(
-            Modifier.padding(16.dp),
-            contentAlignment = Alignment.BottomStart
-        ) {
-            Text(
-                text = movie.title ?: " ",
-                style = MaterialTheme.typography.h6,
-                color = LightBlue
-            )
-        }
-
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
 fun SubscribedMovieCard(movie: Movie, onClick: (Movie) -> Unit) {
     Card(
         modifier = Modifier
@@ -298,7 +261,7 @@ fun SubscribedMovieCard(movie: Movie, onClick: (Movie) -> Unit) {
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(BaseUrl + movie.posterPath)
+                .data(stringResource(id = R.string.image_base_url) + movie.posterPath)
                 .crossfade(true)
                 .build(),
             placeholder = null,

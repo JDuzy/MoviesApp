@@ -63,7 +63,6 @@ class MovieListViewModel @Inject constructor(
         }
     )
 
-
     private suspend fun getMovies(page: Int?): Result<List<Movie>> {
         isLoadingColum = true
 
@@ -94,13 +93,13 @@ class MovieListViewModel @Inject constructor(
         (actualIndex >= moviesResponse.movies.lastIndex && !endReached && !isLoadingColum)
 
 
-    fun searchMovies() {
+    fun searchMovies(query: String = searchQuery) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch(Dispatchers.Main + coroutineExceptionHandler) {
             isLoadingColum = true
             resetPageKey()
             delay(500L)
-            val searchedMovies = fetchMoviesWithQuery().getOrElse {
+            val searchedMovies = fetchMoviesWithQuery(query).getOrElse {
                 columnError = it.message
                 isLoadingColum = false
             } as List<Movie>
@@ -109,9 +108,9 @@ class MovieListViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchMoviesWithQuery(): Result<List<Movie>> {
+    private suspend fun fetchMoviesWithQuery(query: String = searchQuery): Result<List<Movie>> {
         when (val result = repository.searchMovies(
-            searchQuery, pageKey
+            query, pageKey
         )) {
             is Resource.Success -> {
                 isLoadingColum = false
@@ -200,6 +199,4 @@ class MovieListViewModel @Inject constructor(
         subscribedMovies = subscribedMovies.minus(movie)
         movie.wasSubscribed = true
     }
-
-
 }

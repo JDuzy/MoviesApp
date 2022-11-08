@@ -33,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,8 +54,6 @@ import com.juanduzac.movieapp.presentation.ui.theme.HeaderCollapsedHeight
 import com.juanduzac.movieapp.presentation.ui.theme.HeaderExpandedHeight
 import com.juanduzac.movieapp.presentation.ui.theme.White
 import kotlin.math.max
-
-private const val BaseUrl = "https://image.tmdb.org/t/p/original/" // TODO Save url on Strings
 
 @Composable
 fun MovieDetailScreen(navController: NavController, viewModel: MovieListViewModel) {
@@ -177,7 +176,7 @@ private fun BackgroundPoster(movie: Movie, mainColor: Color, onMainColorChange: 
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(BaseUrl + movie.posterPath)
+                .data(stringResource(id = R.string.image_base_url) + movie.posterPath)
                 .crossfade(true)
                 .allowHardware(false)
                 .build(),
@@ -254,7 +253,7 @@ private fun PosterCard(modifier: Modifier = Modifier, movie: Movie) {
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(BaseUrl + movie.posterPath)
+                .data(stringResource(id = R.string.image_base_url) + movie.posterPath)
                 .crossfade(true)
                 .build(),
             placeholder = null,
