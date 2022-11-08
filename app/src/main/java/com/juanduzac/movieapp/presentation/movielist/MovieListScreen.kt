@@ -32,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -44,6 +46,8 @@ import com.juanduzac.movieapp.domain.model.Movie
 import com.juanduzac.movieapp.presentation.movielist.composables.Search
 import com.juanduzac.movieapp.presentation.navigation.Screen
 import com.juanduzac.movieapp.presentation.ui.theme.Black
+import com.juanduzac.movieapp.presentation.ui.theme.DarkBlue
+import com.juanduzac.movieapp.presentation.ui.theme.LightBlue
 import com.juanduzac.movieapp.presentation.ui.theme.Shapes
 import com.juanduzac.movieapp.presentation.ui.theme.White
 import kotlinx.coroutines.launch
@@ -90,9 +94,15 @@ fun MovieListScreen(navController: NavController, viewModel: MovieListViewModel)
             }
             item {
                 SubscribedMoviesLazyRow(
-                    modifier = Modifier.padding(start = 16.dp),
-                    viewModel.moviesResponse.movies
-                )
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp),
+                    viewModel.subscribedMovies,
+                    viewModel.isLoadingRow
+                ){ movie ->
+                    viewModel.selectMovie(movie)
+                    navController.navigate(Screen.MovieDetailScreen.route)
+                }
             }
             item {
                 RecommendedMoviesColumnTitle(
@@ -108,13 +118,13 @@ fun MovieListScreen(navController: NavController, viewModel: MovieListViewModel)
                 if (viewModel.shouldFetchMoreMovies(index))
                     viewModel.loadNextMovies()
                 RecommendedMovieCard(movie) {
-                    viewModel.getMovieDetails(movie)
+                    viewModel.selectMovie(movie)
                     navController.navigate(Screen.MovieDetailScreen.route)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
             item {
-                if (viewModel.isLoading) {
+                if (viewModel.isLoadingColum) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -203,16 +213,26 @@ fun SubscribedMoviesRowTitle(modifier: Modifier) {
 }
 
 @Composable
-fun SubscribedMoviesLazyRow(modifier: Modifier, movies: List<Movie>?) {
-    movies?.let {
-        LazyRow(modifier = modifier) {
-            items(movies) { movie ->
-                SubscribedMovieCard(movie)
-                Spacer(modifier = Modifier.width(12.dp))
+fun SubscribedMoviesLazyRow(modifier: Modifier, movies: List<Movie>, isLoading: Boolean, onClickMovie: (Movie) -> Unit) {
+    LazyRow(modifier = modifier) {
+        if (isLoading) {
+            item {
+                Box(Modifier.fillMaxSize()) {
+                    CircularProgressIndicator()
+                }
+            }
+        } else {
+            if (movies.isEmpty()) {
+                item {
+                    EmptySubscriptionList()
+                }
+            } else {
+                items(movies) { movie ->
+                    SubscribedMovieCard(movie, onClickMovie)
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
             }
         }
-    } ?: run {
-        Text(text = "SIGUE SERIES PARA VERLAS AQUI") // TODO CARD
     }
 }
 
@@ -241,10 +261,12 @@ fun RecommendedMovieCard(movie: Movie, onClick: () -> Unit) {
                 .data(BaseUrl + movie.posterPath)
                 .crossfade(true)
                 .build(),
+            colorFilter = ColorFilter.tint(color = DarkBlue, BlendMode.Color),
             placeholder = null,
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+
         )
 
         Box(
@@ -253,21 +275,26 @@ fun RecommendedMovieCard(movie: Movie, onClick: () -> Unit) {
         ) {
             Text(
                 text = movie.title ?: " ",
-                style = MaterialTheme.typography.h6
+                style = MaterialTheme.typography.h6,
+                color = LightBlue
             )
         }
 
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SubscribedMovieCard(movie: Movie) {
+fun SubscribedMovieCard(movie: Movie, onClick: (Movie) -> Unit) {
     Card(
         modifier = Modifier
             .width(92.dp)
             .height(152.dp),
         shape = Shapes.medium,
-        elevation = 4.dp
+        elevation = 4.dp,
+        onClick = {
+           onClick(movie)
+        }
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -279,5 +306,30 @@ fun SubscribedMovieCard(movie: Movie) {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
+    }
+}
+
+@Composable
+private fun EmptySubscriptionList() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(152.dp),
+        shape = Shapes.medium,
+        elevation = 4.dp
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Suscribete a peliculas para organizarlas aquí",
+                style = MaterialTheme.typography.body1,
+                color = LightBlue
+            )
+        }
+
     }
 }

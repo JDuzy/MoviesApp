@@ -1,5 +1,8 @@
 package com.juanduzac.movieapp.data.di
 
+import android.app.Application
+import androidx.room.Room
+import com.juanduzac.movieapp.data.local.MovieDatabase
 import com.juanduzac.movieapp.data.remote.api.MovieApi
 import dagger.Module
 import dagger.Provides
@@ -32,5 +35,15 @@ object AppModule {
             .client(httpClient.build())
             .build()
             .create()
+    }
+
+    @Provides
+    @Singleton
+    fun providesVendorDatabase(app: Application): MovieDatabase {
+        return Room.databaseBuilder(
+            app,
+            MovieDatabase::class.java,
+            "moviesdb"
+        ).build()
     }
 }

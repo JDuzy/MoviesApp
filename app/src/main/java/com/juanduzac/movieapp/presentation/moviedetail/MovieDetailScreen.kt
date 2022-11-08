@@ -1,6 +1,5 @@
 package com.juanduzac.movieapp.presentation.moviedetail
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -48,6 +46,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.juanduzac.movieapp.R
 import com.juanduzac.movieapp.domain.model.Movie
+import com.juanduzac.movieapp.presentation.moviedetail.composables.SubscriptionButton
 import com.juanduzac.movieapp.presentation.movielist.MovieListViewModel
 import com.juanduzac.movieapp.presentation.ui.theme.Black
 import com.juanduzac.movieapp.presentation.ui.theme.HeaderCollapsedHeight
@@ -73,24 +72,30 @@ fun MovieDetailScreen(navController: NavController, viewModel: MovieListViewMode
         (scrollState.firstVisibleItemScrollOffset.toFloat())
     ) / maxOffset).takeIf { it <= 1 } ?: 1f
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        BackgroundPoster(viewModel.selectedMovie, mainColor) {
-            mainColor = it
-        }
-        Content(scrollState, viewModel.selectedMovie, progress, contentColor)
-        MotionHeader(
+    with(viewModel) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(HeaderExpandedHeight),
-            progress = progress,
-            movie = viewModel.selectedMovie,
-            contentColor = contentColor,
-            mainColor = mainColor
-        ) { navController.popBackStack() }
-
+                .fillMaxSize()
+        ) {
+            BackgroundPoster(selectedMovie, mainColor) {
+                mainColor = it
+            }
+            Content(scrollState, selectedMovie, progress, contentColor)
+            MotionHeader(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(HeaderExpandedHeight),
+                progress = progress,
+                movie = selectedMovie,
+                isMovieSubscribed = selectedMovie.wasSubscribed,
+                contentColor = contentColor,
+                mainColor = mainColor,
+                isLoadingRow = isLoadingRow,
+                onSubscribeButtonClick = {
+                    onSubscribeButtonClick()
+                }
+            ) { navController.popBackStack() }
+        }
     }
 }
 
@@ -100,16 +105,17 @@ private fun MotionHeader(
     modifier: Modifier = Modifier,
     progress: Float,
     movie: Movie,
+    isMovieSubscribed: Boolean,
     contentColor: Color,
     mainColor: Color,
+    isLoadingRow: Boolean,
+    onSubscribeButtonClick: () -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val motionScene = remember {
         context.resources.openRawResource(R.raw.motion_scene).readBytes().decodeToString()
     }
-
-    var sub by remember { mutableStateOf(true) }
 
     MotionLayout(
         motionScene = MotionScene(motionScene),
@@ -134,11 +140,12 @@ private fun MotionHeader(
             text = movie.getReleaseYearText(),
             color = contentColor
         )
-        SubscribeButton(
+        SubscriptionButton(
             modifier = Modifier.layoutId("subscribe_button"),
-            onClick = { sub = !sub },
-            subscribed = sub,
+            onClick = onSubscribeButtonClick,
+            subscribed = isMovieSubscribed,
             contentColor = contentColor,
+            isLoading = isLoadingRow,
             mainColor = mainColor
         )
     }
@@ -146,7 +153,12 @@ private fun MotionHeader(
 }
 
 @Composable
-private fun Content(scrollState: LazyListState, movie: Movie, progress: Float, contentColor: Color) {
+private fun Content(
+    scrollState: LazyListState,
+    movie: Movie,
+    progress: Float,
+    contentColor: Color
+) {
 
     LazyColumn(
         modifier = Modifier
@@ -211,34 +223,6 @@ private fun Description(modifier: Modifier = Modifier, movie: Movie, contentColo
         style = MaterialTheme.typography.body1,
         lineHeight = 30.sp
     )
-}
-
-@Composable
-private fun SubscribeButton(
-    modifier: Modifier = Modifier,
-    subscribed: Boolean,
-    contentColor: Color,
-    mainColor: Color,
-    onClick: () -> Unit
-) {
-
-    Button(
-        modifier = modifier,
-        onClick = onClick,
-        enabled = true,
-        colors = ButtonDefaults.buttonColors(
-            backgroundColor = if (subscribed) contentColor else Color.Transparent,
-            contentColor = if (subscribed) mainColor else contentColor
-        ),
-        shape = CircleShape,
-        border = if (subscribed) null else BorderStroke(2.dp, contentColor),
-    ) {
-        Text(
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 8.dp),
-            text = if (subscribed) "SUSCRIPTO" else "SUSCRIBIRME",
-            color = if (subscribed) mainColor else contentColor
-        )
-    }
 }
 
 @Composable
