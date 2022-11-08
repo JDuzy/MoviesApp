@@ -25,8 +25,8 @@ class MovieListViewModel @Inject constructor(
 
     var moviesResponse by mutableStateOf(MoviesListResponse())
     var selectedMovie by mutableStateOf(Movie())
-    var isLoading by mutableStateOf(false)
-    var error by mutableStateOf<String?>(null)
+    var isLoadingColum by mutableStateOf(false)
+    var columnError by mutableStateOf<String?>(null)
 
     var isSearching by mutableStateOf(false)
     var searchQuery by mutableStateOf("")
@@ -35,14 +35,18 @@ class MovieListViewModel @Inject constructor(
     var endReached by mutableStateOf(false)
     private var pageKey: Int? = 1
 
+    var subscribedMovies by mutableStateOf(listOf<Movie>())
+    var isLoadingRow by mutableStateOf(false)
+    var rowError by mutableStateOf<String?>(null)
+
     private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        error = throwable.message
+        columnError = throwable.message
     }
 
     private val paginator = DefaultPaginator<Int?, Movie>(
         initialKey = pageKey,
         onLoadUpdated = {
-            isLoading = it
+            isLoadingColum = it
         },
         onRequest = { nextKey ->
             getMovies(nextKey)
@@ -51,7 +55,7 @@ class MovieListViewModel @Inject constructor(
             pageKey?.plus(1)
         },
         onError = {
-            error = it?.message
+            columnError = it?.message
         },
         onSuccess = { items, nextKey ->
             moviesResponse = MoviesListResponse(movies = moviesResponse.movies.plus(items))
@@ -59,21 +63,22 @@ class MovieListViewModel @Inject constructor(
         }
     )
 
+
     private suspend fun getMovies(page: Int?): Result<List<Movie>> {
-        isLoading = true
+        isLoadingColum = true
 
         when (val result = repository.getMovies(
             page
         )) {
             is Resource.Success -> {
-                isLoading = false
+                isLoadingColum = false
                 result.data?.movies?.let { return Result.success(it) } ?: return Result.failure(
                     Exception(result.message)
                 )
             }
             is Resource.Error -> {
-                isLoading = false
-                error = result.message
+                isLoadingColum = false
+                columnError = result.message
                 return Result.failure(Exception(result.message))
             }
         }
@@ -86,18 +91,18 @@ class MovieListViewModel @Inject constructor(
     }
 
     fun shouldFetchMoreMovies(actualIndex: Int): Boolean =
-        (actualIndex >= moviesResponse.movies.lastIndex && !endReached && !isLoading)
+        (actualIndex >= moviesResponse.movies.lastIndex && !endReached && !isLoadingColum)
 
 
     fun searchMovies() {
         searchJob?.cancel()
         searchJob = viewModelScope.launch(Dispatchers.Main + coroutineExceptionHandler) {
-            isLoading = true
+            isLoadingColum = true
             resetPageKey()
             delay(500L)
             val searchedMovies = fetchMoviesWithQuery().getOrElse {
-                error = it.message
-                isLoading = false
+                columnError = it.message
+                isLoadingColum = false
             } as List<Movie>
             moviesResponse = MoviesListResponse(movies = searchedMovies)
             pageKey?.plus(1)
@@ -109,14 +114,14 @@ class MovieListViewModel @Inject constructor(
             searchQuery, pageKey
         )) {
             is Resource.Success -> {
-                isLoading = false
+                isLoadingColum = false
                 result.data?.movies?.let { return Result.success(it) } ?: return Result.failure(
                     Exception(result.message)
                 )
             }
             is Resource.Error -> {
-                isLoading = false
-                error = result.message
+                isLoadingColum = false
+                columnError = result.message
                 return Result.failure(Exception(result.message))
             }
         }
@@ -130,15 +135,71 @@ class MovieListViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.Main + coroutineExceptionHandler) {
             resetPageKey()
             val searchedMovies = getMovies(pageKey).getOrElse {
-                error = it.message
-                isLoading = false
+                columnError = it.message
+                isLoadingColum = false
             } as List<Movie>
             moviesResponse = MoviesListResponse(movies = searchedMovies)
             pageKey?.plus(1)
         }
     }
 
-    fun getMovieDetails(movie: Movie) {
+    fun selectMovie(movie: Movie) {
         selectedMovie = movie
     }
+
+    fun getSubscribedMovies() {
+        isLoadingRow = true
+        viewModelScope.launch(Dispatchers.Main + coroutineExceptionHandler) {
+            when (val result = repository.getSubscribedMovies()) {
+                is Resource.Success -> {
+                    isLoadingRow = false
+                    subscribedMovies = result.data ?: emptyList()
+                }
+                is Resource.Error -> {
+                    isLoadingRow = false
+                    rowError = result.message
+                }
+            }
+        }
+    }
+
+    fun onSubscribeButtonClick() {
+        isLoadingRow = true
+        viewModelScope.launch(Dispatchers.Main + coroutineExceptionHandler) {
+            when (val result = repository.isMovieSubscribed(selectedMovie)) {
+                is Resource.Success -> {
+                    selectedMovie.wasSubscribed = result.data ?: false
+                    if (selectedMovie.wasSubscribed){
+                        unsubscribeMovie(selectedMovie)
+                        selectedMovie.wasSubscribed = false
+                    }
+                    else {
+                        subscribeMovie(selectedMovie)
+                        selectedMovie.wasSubscribed = true
+                    }
+                    isLoadingRow = false
+                }
+                is Resource.Error -> {
+                    isLoadingRow = false
+                    result.message
+                } // TODO FEEDBACK
+            }
+        }
+    }
+
+    private suspend fun subscribeMovie(movie: Movie) {
+        if (repository.subscribeMovie(movie)) {
+            subscribedMovies = subscribedMovies.plus(movie)
+            movie.wasSubscribed = true
+        }
+
+    }
+
+    private suspend fun unsubscribeMovie(movie: Movie) {
+        repository.unsubscribeMovie(movie)
+        subscribedMovies = subscribedMovies.minus(movie)
+        movie.wasSubscribed = true
+    }
+
+
 }

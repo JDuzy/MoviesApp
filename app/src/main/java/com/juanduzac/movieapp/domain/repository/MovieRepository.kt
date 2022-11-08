@@ -19,6 +19,12 @@ interface MovieRepository {
         page: Int?
     ): Resource<MoviesListResponse>
 
+    suspend fun isMovieSubscribed(movie: Movie): Resource<Boolean>
 
+    suspend fun getSubscribedMovies(): Resource<List<Movie>>
+
+    suspend fun subscribeMovie(movie: Movie): Boolean
+
+    suspend fun unsubscribeMovie(movie: Movie)
 
 }
